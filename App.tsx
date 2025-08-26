@@ -14,8 +14,8 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Index">
-        <Stack.Screen name="Index" component={IndexScreen} options={{ title: "Date Picker" }} />
-        <Stack.Screen name="Costs" component={CostsScreen} options={{ title: "Costs" }} />
+        <Stack.Screen name="Index" component={IndexScreen} options={{ title: "home" }} />
+        <Stack.Screen name="Costs" component={CostsScreen} options={{ title: "costs" }} />
       </Stack.Navigator>
     </NavigationContainer>
   )

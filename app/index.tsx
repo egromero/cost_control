@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
@@ -19,6 +19,13 @@ export default function IndexScreen() {
   const monthScrollRef = useRef<ScrollView>(null)
   const yearScrollRef = useRef<ScrollView>(null)
 
+  // Scroll to current month on mount
+  useEffect(() => {
+    if (monthScrollRef.current) {
+      monthScrollRef.current.scrollTo({ y: selectedMonth * ITEM_HEIGHT, animated: false })
+    }
+  }, [])
+
   const months = [
     "January",
     "February",
@@ -35,7 +42,7 @@ export default function IndexScreen() {
   ]
 
   // Generate years from 1950 to 2050
-  const years = Array.from({ length: 101 }, (_, i) => 1950 + i)
+  const years = Array.from({ length: 4 }, (_, i) => 2025 + i)
 
   const handleMonthScroll = (event: any) => {
     const y = event.nativeEvent.contentOffset.y
@@ -48,15 +55,8 @@ export default function IndexScreen() {
     const index = Math.round(y / ITEM_HEIGHT)
     setSelectedYear(years[index])
   }
-
-  const formatSelectedDate = () => {
-    return `${months[selectedMonth]} ${selectedYear}`
-  }
-
+  
   const handleButtonPress = () => {
-    const selectedDate = formatSelectedDate()
-    console.log("Selected date:", selectedDate)
-
     navigation.navigate("Costs", {
       month: selectedMonth + 1,
       year: selectedYear,
@@ -71,12 +71,6 @@ export default function IndexScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Date Selector</Text>
-
-      <View style={styles.dateSection}>
-        <Text style={styles.label}>Selected Month & Year:</Text>
-        <Text style={styles.selectedDate}>{formatSelectedDate()}</Text>
-      </View>
 
       <View style={styles.pickerContainer}>
         <View style={styles.pickerColumn}>
@@ -117,7 +111,7 @@ export default function IndexScreen() {
       </View>
 
       <TouchableOpacity style={styles.actionButton} onPress={handleButtonPress}>
-        <Text style={styles.buttonText}>Confirm Selection</Text>
+        <Text style={styles.buttonText}>go</Text>
       </TouchableOpacity>
     </View>
   )
@@ -205,14 +199,19 @@ const styles = StyleSheet.create({
     pointerEvents: "none",
   },
   actionButton: {
-    backgroundColor: "#000000",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 8,
+    backgroundColor: "#ffffff",
+    borderColor: "#000000",
+    borderWidth: 2,
+    borderRadius: 16, // smooth radius
+    width: "80%",
+    paddingVertical: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
   },
   buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
+    color: "#000000",
   },
 })

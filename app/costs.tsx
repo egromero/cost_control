@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native"
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal, TextInput } from "react-native"
 import { useRoute } from "@react-navigation/native"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../App"
@@ -17,6 +17,9 @@ export default function CostsScreen() {
   const [costs, setCosts] = useState<CostItem[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [newItem, setNewItem] = useState("")
+  const [newCost, setNewCost] = useState("")
 
   const route = useRoute<CostsRouteProp>()
   const { month, year } = route.params
@@ -55,7 +58,56 @@ export default function CostsScreen() {
   }
 
   const handleAddNewCost = () => {
-    Alert.alert("Add New Cost", "This would open a form to add a new cost item")
+    setModalVisible(true)
+  }
+
+  const handleSendNewCost = async () => {
+    if (!newItem.trim() || !newCost.trim()) {
+      Alert.alert("Error", "Please fill in both item and cost fields")
+      return
+    }
+
+    const costValue = Number.parseFloat(newCost)
+    if (isNaN(costValue)) {
+      Alert.alert("Error", "Please enter a valid cost amount")
+      return
+    }
+
+    try {
+      // Make POST request to add new cost
+      const response = await fetch(`https://your-api-endpoint.com/costs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          item: newItem.trim(),
+          cost: costValue,
+          month,
+          year,
+        }),
+      })
+
+      if (response.ok) {
+        // Close modal and reset form
+        setModalVisible(false)
+        setNewItem("")
+        setNewCost("")
+        // Refresh the costs list
+        fetchCosts()
+      } else {
+        Alert.alert("Error", "Failed to add new cost")
+      }
+    } catch (error) {
+      console.error("Error adding new cost:", error)
+      Alert.alert("Error", "Failed to add new cost")
+    }
+  }
+
+  const handleCloseModal = () => {
+    setModalVisible(false)
+    setNewItem("")
+    setNewCost("")
   }
 
   if (loading) {
@@ -70,26 +122,25 @@ export default function CostsScreen() {
     <View style={styles.container}>
       <View style={styles.dateContainer}>
         <Text style={styles.dateText}>
-          Costs for {month}/{year}
+          {month}/{year}
         </Text>
       </View>
 
       {/* Total Display */}
       <View style={styles.totalContainer}>
-        <Text style={styles.totalLabel}>Total Costs</Text>
+        <Text style={styles.totalLabel}>total</Text>
         <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
       </View>
 
       {/* Add New Cost Button */}
       <TouchableOpacity style={styles.addButton} onPress={handleAddNewCost}>
-        <Text style={styles.addButtonText}>Add New Cost</Text>
+        <Text style={styles.addButtonText}>add new cost</Text>
       </TouchableOpacity>
 
       {/* Costs Table */}
       <View style={styles.tableContainer}>
         <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>Item</Text>
-          <Text style={styles.headerText}>Cost</Text>
+          <Text style={styles.headerText}>stuffs</Text>
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={true}>
@@ -101,6 +152,41 @@ export default function CostsScreen() {
           ))}
         </ScrollView>
       </View>
+
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={handleCloseModal}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>add new cost</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="item"
+              placeholderTextColor="#888888"
+              value={newItem}
+              onChangeText={setNewItem}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="cost"
+              placeholderTextColor="#888888"
+              value={newCost}
+              onChangeText={setNewCost}
+              keyboardType="numeric"
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={handleCloseModal}>
+                <Text style={styles.cancelButtonText}>cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.sendButton} onPress={handleSendNewCost}>
+                <Text style={styles.sendButtonText}>send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -165,6 +251,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#000000",
+    textAlign: "center",
   },
   scrollView: {
     flex: 1,
@@ -195,5 +282,66 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#000000",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 24,
+    width: "80%",
+    maxWidth: 300,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#000000",
+    marginBottom: 16,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    marginRight: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: "#888888",
+  },
+  sendButton: {
+    flex: 1,
+    paddingVertical: 12,
+    marginLeft: 8,
+    borderRadius: 8,
+    backgroundColor: "#000000",
+    alignItems: "center",
+  },
+  sendButtonText: {
+    fontSize: 16,
+    color: "#ffffff",
+    fontWeight: "600",
   },
 })
